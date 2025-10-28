@@ -17,11 +17,15 @@ Word: ಊರಿಗೆ → WX: UrigeV
 POS: N__NN, Category: n
 Matches / Base Words:
 File: paradigms/Noun/UruN8_word_split.txt
-Base Word: UruN8_word_split
+Base File: UruN8_word_split
+Matched Token: UrigeV
+Root/Lemma: Uru
 ----------------------------------------------------------------------
 Word: ಬಂದ → WX: baMxa
 POS: V__VM__VF, Category: v
 Matches / Base Words:
 File: paradigms/Verb/baruV16_word_split.txt
-Base Word: baruV16_word_split
+Base File: baruV16_word_split
+Matched Token: baMxa
+Root/Lemma: baru
 ----------------------------------------------------------------------
