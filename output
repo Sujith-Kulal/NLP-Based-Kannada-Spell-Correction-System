@@ -1,0 +1,27 @@
+Word: ಸಂಭ್ರಮದಲ್ಲಿ → WX: saMBramaxalli
+POS: N__NN, Category: n
+Matches / Base Words:
+No exact match found for ಸಂಭ್ರಮದಲ್ಲಿ (saMBramaxalli)
+Closest words found (based on edit distance):
+File: paradigms/Noun/maraN1_word_split.txt
+Word: maraxalli
+Edit Distance: 5
+File: paradigms/Noun/mUdaNaN19_word_split.txt
+Word: mUdaNaxalli
+Edit Distance: 6
+File: paradigms/Noun/garudaN6_word_split.txt
+Word: garudanalli
+Edit Distance: 6
+----------------------------------------------------------------------
+Word: ಊರಿಗೆ → WX: UrigeV
+POS: N__NN, Category: n
+Matches / Base Words:
+File: paradigms/Noun/UruN8_word_split.txt
+Base Word: UruN8_word_split
+----------------------------------------------------------------------
+Word: ಬಂದ → WX: baMxa
+POS: V__VM__VF, Category: v
+Matches / Base Words:
+File: paradigms/Verb/baruV16_word_split.txt
+Base Word: baruV16_word_split
+----------------------------------------------------------------------
