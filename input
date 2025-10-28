@@ -1,0 +1,17 @@
+<Sentence id='1'>
+1	((	NP	
+1.1	ಹುಸೇನ್	N__NNP	
+	))
+2	((	NP	
+2.1	ಸಂಭ್ರಮದಲ್ಲಿ	N__NN	
+	))
+3	((	NP	
+3.1	ಊರಿಗೆ	N__NN	
+	))
+4	((	VGF	
+4.1	ಬಂದ	V__VM__VF	
+	))
+5	((	BLK	
+5.1	.	RD__PUNC	
+	))
+</Sentence>
