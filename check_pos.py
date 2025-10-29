@@ -63,6 +63,9 @@ def read_excel(path):
 def search_in_paradigm_folder(wx_word, paradigm_dir):
     """Search for a WX word in all .txt files inside a paradigm folder."""
     matched_files = []
+    # Defensive: if paradigm_dir is not provided or invalid, return empty
+    if not paradigm_dir:
+        return matched_files
     if not os.path.exists(paradigm_dir):
         return matched_files
 
@@ -116,6 +119,9 @@ def find_closest_words_in_files(wx_word, paradigm_dir, top_n=3):
     (removing grammar suffixes like +, _, or tags).
     """
     closest_matches = []
+    # Defensive: if paradigm_dir is not provided or invalid, return empty
+    if not paradigm_dir:
+        return closest_matches
     if not os.path.exists(paradigm_dir):
         return closest_matches
 
@@ -204,7 +210,11 @@ def main():
 
         # Search inside paradigm folder
         paradigm_dir = paradigm_folders.get(category)
-        matches = search_in_paradigm_folder(wx_word, paradigm_dir)
+        # Defensive: if paradigm_dir is None/empty, skip direct search to avoid passing None to os.path.exists
+        if not paradigm_dir:
+            matches = []
+        else:
+            matches = search_in_paradigm_folder(wx_word, paradigm_dir)
 
         # If no direct match → compute edit distances
         if not matches:
