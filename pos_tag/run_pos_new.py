@@ -1,10 +1,76 @@
 import sys
+import os
+import tempfile
+import subprocess
 # from datasets import ClassLabel, load_dataset, load_metric, DownloadMode
 from transformers import AutoModelForTokenClassification, AutoConfig, AutoTokenizer, TrainingArguments, Trainer, DataCollatorForTokenClassification, EarlyStoppingCallback, IntervalStrategy
 import numpy as np
 import torch
 import pickle
 import argparse
+
+
+def _ensure_gdown():
+    try:
+        import gdown  # noqa: F401
+        return True
+    except Exception:
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "gdown"], check=True)
+            import gdown  # noqa: F401
+            return True
+        except Exception:
+            return False
+
+
+def _download_drive_path(url_or_id, dest_dir):
+    if not _ensure_gdown():
+        raise RuntimeError("gdown is required to download from Google Drive. Please install it: pip install gdown")
+
+    if 'drive.google.com' in url_or_id and '/folders/' in url_or_id:
+        cmd = ["gdown", "--folder", url_or_id, "-O", dest_dir]
+        subprocess.run(cmd, check=True)
+        return dest_dir
+    else:
+        cmd = ["gdown", url_or_id, "-O", dest_dir]
+        subprocess.run(cmd, check=True)
+        # return the downloaded file or directory
+        for root, _, files in os.walk(dest_dir):
+            for fn in files:
+                return os.path.join(root, fn)
+        return dest_dir
+
+
+def _is_drive_url(s):
+    return isinstance(s, str) and 'drive.google.com' in s
+
+
+def _prepare_path(path_arg, expect_dir=False):
+    """If path_arg is a local path return it, otherwise if it's a Drive URL download to a temp dir and return local path.
+
+    If expect_dir is True, for Drive folders return the downloaded folder path; otherwise return a file path when possible.
+    """
+    if os.path.exists(path_arg):
+        return path_arg
+    if _is_drive_url(path_arg):
+        tmp = tempfile.mkdtemp(prefix='run_pos_')
+        downloaded = _download_drive_path(path_arg, tmp)
+        # If folder was downloaded and expect_dir True, return the folder
+        if expect_dir and os.path.isdir(downloaded):
+            return downloaded
+        # If a folder was downloaded but expect_dir False, try to find a sensible file
+        if os.path.isdir(downloaded):
+            # try to find model folder (contains config.json or pytorch_model.bin) or first .txt/.conll
+            for root, dirs, files in os.walk(downloaded):
+                if 'config.json' in files or 'pytorch_model.bin' in files:
+                    return root
+            for root, _, files in os.walk(downloaded):
+                for fn in files:
+                    if fn.lower().endswith(('.txt', '.conll', '.xml')):
+                        return os.path.join(root, fn)
+            return downloaded
+        return downloaded
+    raise FileNotFoundError(f"Path not found and not a Drive URL: {path_arg}")
 
 
 # Parse command-line arguments
@@ -20,8 +86,9 @@ args = parser.parse_args()
 with open(f"encoding_dict.pickle","rb") as f:
     encoding_dict = pickle.load(f)
 
-tokenizer_path = args.model
-model_path = args.model
+# If model is a Drive URL or non-local path, download it and use the local folder
+tokenizer_path = _prepare_path(args.model, expect_dir=True) if args.model else None
+model_path = tokenizer_path
 
 # Load the tokenizer from the saved folder
 tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
@@ -30,10 +97,11 @@ tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 model = AutoModelForTokenClassification.from_pretrained(model_path)
 
 sentence_data = []
-conll_file = args.input
+# Prepare input file - supports local path or Drive URL
+conll_file = _prepare_path(args.input, expect_dir=False) if args.input else None
 
-with open(conll_file,"r",encoding='utf-8') as f:
-	data = f.readlines()
+with open(conll_file, "r", encoding='utf-8') as f:
+    data = f.readlines()
 
 sent = []
 for i in range(len(data)):

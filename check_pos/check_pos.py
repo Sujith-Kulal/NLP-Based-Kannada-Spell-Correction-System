@@ -63,6 +63,9 @@ def read_excel(path):
 def search_in_paradigm_folder(wx_word, paradigm_dir):
     """Search for a WX word in all .txt files inside a paradigm folder."""
     matched_files = []
+    # Defensive: if paradigm_dir is not provided or invalid, return empty
+    if not paradigm_dir:
+        return matched_files
     if not os.path.exists(paradigm_dir):
         return matched_files
 
@@ -72,11 +75,36 @@ def search_in_paradigm_folder(wx_word, paradigm_dir):
                 continue
             fpath = os.path.join(root, f)
             try:
+                # Read file line-by-line and try to extract the actual token that matches wx_word.
                 with open(fpath, "r", encoding="utf-8") as fin:
-                    content = fin.read()
-                    if wx_word in content:
-                        base_word = os.path.splitext(f)[0]
-                        matched_files.append((fpath, base_word))
+                    for line in fin:
+                        line = line.strip()
+                        if not line:
+                            continue
+
+                        # Clean the line to extract the token (same rules as in find_closest_words_in_files)
+                        token = line.split()[0]
+                        token = token.split('+')[0]
+                        token = token.split('_')[0]
+                        token = token.strip()
+                        if not token:
+                            continue
+
+                        # If exact WX token matches, record the file, the matched token and the lemma/root
+                        if token == wx_word:
+                            base_word = os.path.splitext(f)[0]
+                            # Try to extract lemma/root from the annotation part of the line
+                            lemma = None
+                            parts = line.split(None, 1)
+                            if len(parts) > 1:
+                                ann = parts[1].strip()
+                                # ann format expected like: Uru(N8)+rigeV_ru_DAT
+                                # take portion before first '+' and remove any parenthesis
+                                lemma_part = ann.split('+')[0]
+                                lemma = lemma_part.split('(')[0].strip()
+                            matched_files.append((fpath, base_word, token, lemma))
+                            # Stop scanning this file once we've found a match
+                            break
             except Exception:
                 pass
     return matched_files
@@ -91,6 +119,9 @@ def find_closest_words_in_files(wx_word, paradigm_dir, top_n=3):
     (removing grammar suffixes like +, _, or tags).
     """
     closest_matches = []
+    # Defensive: if paradigm_dir is not provided or invalid, return empty
+    if not paradigm_dir:
+        return closest_matches
     if not os.path.exists(paradigm_dir):
         return closest_matches
 
@@ -179,7 +210,11 @@ def main():
 
         # Search inside paradigm folder
         paradigm_dir = paradigm_folders.get(category)
-        matches = search_in_paradigm_folder(wx_word, paradigm_dir)
+        # Defensive: if paradigm_dir is None/empty, skip direct search to avoid passing None to os.path.exists
+        if not paradigm_dir:
+            matches = []
+        else:
+            matches = search_in_paradigm_folder(wx_word, paradigm_dir)
 
         # If no direct match → compute edit distances
         if not matches:
@@ -196,8 +231,23 @@ def main():
                 match_text = f"No match found for {word} ({wx_word})"
         else:
             match_lines = []
-            for fpath, base in matches:
-                match_lines.append(f"File: {fpath}\nBase Word: {base}")
+            # matches may contain tuples in forms:
+            # (fpath, base) or (fpath, base, token) or (fpath, base, token, lemma)
+            for item in matches:
+                if len(item) == 4:
+                    fpath, base, matched_token, lemma = item
+                    if lemma:
+                        match_lines.append(f"File: {fpath}\nBase File: {base}\nMatched Token: {matched_token}\nRoot/Lemma: {lemma}")
+                    else:
+                        match_lines.append(f"File: {fpath}\nBase File: {base}\nMatched Token: {matched_token}")
+                elif len(item) == 3:
+                    fpath, base, matched_token = item
+                    match_lines.append(f"File: {fpath}\nBase File: {base}\nMatched Token: {matched_token}")
+                elif len(item) == 2:
+                    fpath, base = item
+                    match_lines.append(f"File: {fpath}\nBase File: {base}")
+                else:
+                    match_lines.append(str(item))
             match_text = "\n".join(match_lines)
 
         results.append({
