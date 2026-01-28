@@ -9,11 +9,7 @@
 
 ## **1.1 Purpose**
 
-This document defines the Software Requirements Specification (SRS) for the **NLP-Based Kannada Spell Checker**, a real-time spell-checking system that works across multiple Windows applications, including:
-
-* Notepad
-* Microsoft Word
-
+This document defines the Software Requirements Specification (SRS) for the NLP-Based Kannada Spell Checker, a real-time, intelligent spell-checking system that works across multiple Windows applications—including Notepad and Microsoft Word. Unlike the simple dictionary-based spell-check engines typically found in editors like Notepad, this system incorporates advanced NLP techniques such as morphological handling, Unicode–WX transliteration, and edit-distance-based correction, enabling far more accurate detection and suggestion generation for complex Kannada word forms.
 
 The system provides:
 
